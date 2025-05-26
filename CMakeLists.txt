@@ -33,10 +33,12 @@ project(pico-ssd1306+sd C CXX ASM)
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
-# Add executable. Default name is the project name, version 0.1
+add_subdirectory(lib/no-OS-FatFS-SD-SDIO-SPI-RPi-Pico/src)
 
+# Add executable. Default name is the project name, version 0.1
 add_executable(pico-ssd1306+sd
     main.c
+    hw_config.c
 )
 
 pico_set_program_name(pico-ssd1306+sd "pico-ssd1306+sd")
@@ -46,9 +48,11 @@ pico_set_program_version(pico-ssd1306+sd "0.1")
 pico_enable_stdio_uart(pico-ssd1306+sd 1)
 pico_enable_stdio_usb(pico-ssd1306+sd 0)
 
-# Add the standard library to the build
+# Add the standard library and FatFS/SPI to the build
 target_link_libraries(pico-ssd1306+sd
-        pico_stdlib)
+    pico_stdlib
+    no-OS-FatFS-SD-SDIO-SPI-RPi-Pico
+)
 
 # Add the standard include files to the build
 target_include_directories(pico-ssd1306+sd PRIVATE
