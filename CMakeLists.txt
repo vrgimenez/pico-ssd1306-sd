@@ -30,7 +30,7 @@ include(pico_sdk_import.cmake)
 
 project(pico-ssd1306+sd C CXX ASM)
 
-# Initialise the Raspberry Pi Pico SDK
+# Initialize the Raspberry Pi Pico SDK
 pico_sdk_init()
 
 add_subdirectory(lib/no-OS-FatFS-SD-SDIO-SPI-RPi-Pico/src)
@@ -39,6 +39,7 @@ add_subdirectory(lib/no-OS-FatFS-SD-SDIO-SPI-RPi-Pico/src)
 add_executable(pico-ssd1306+sd
     main.c
     hw_config.c
+    lib/pico-ssd1306/ssd1306.c
 )
 
 pico_set_program_name(pico-ssd1306+sd "pico-ssd1306+sd")
@@ -51,6 +52,7 @@ pico_enable_stdio_usb(pico-ssd1306+sd 0)
 # Add the standard library and FatFS/SPI to the build
 target_link_libraries(pico-ssd1306+sd
     pico_stdlib
+    hardware_i2c
     no-OS-FatFS-SD-SDIO-SPI-RPi-Pico
 )
 

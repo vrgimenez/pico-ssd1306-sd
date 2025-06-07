@@ -13,12 +13,33 @@ specific language governing permissions and limitations under the License.
 */
 
 #include <stdio.h>
+#include <stdint.h>         //ssd1306
+#include <string.h>         //ssd1306
 //
 #include "pico/stdlib.h"
+#include "hardware/i2c.h"   //ssd1306
 //
 #include "hw_config.h"
 #include "f_util.h"
 #include "ff.h"
+//ssd1306
+#include "lib/pico-ssd1306/ssd1306.h"
+#include "images/image.h"
+#include "fonts/acme_5_outlines_font.h"
+#include "fonts/bubblesstandard_font.h"
+#include "fonts/crackers_font.h"
+#include "fonts/BMSPA_font.h"
+
+const uint8_t num_chars_per_disp[]={7,7,7,5};
+const uint8_t *fonts[4]= {acme_font, bubblesstandard_font, crackers_font, BMSPA_font};
+
+#define SLEEPTIME       25
+#define i2cx            i2c0    //I2C HW Block Selected
+#define i2cx_sda_gpio   4
+#define i2cx_scl_gpio   5
+
+void setup_gpios(void);
+void animation(void);
 
 /**
  * @file main.c
@@ -34,6 +55,9 @@ specific language governing permissions and limitations under the License.
 int main() {
     // Initialize stdio
     stdio_init_all();
+
+    printf("configuring SSD1306 pins...\n");
+    setup_gpios();
 
     puts("Hello, Secure Digital (SD) world!");
 
@@ -52,7 +76,7 @@ int main() {
     if (FR_OK != fr && FR_EXIST != fr) {
         panic("f_open(%s) error: %s (%d)\n", filename, FRESULT_str(fr), fr);
     }
-    if (f_printf(&fil, "Hello, Secure Digital (SD) world!\n") < 0) {
+    if (f_printf(&fil, __DATE__" "__TIME__" ""Hello, Secure Digital (SD) world!\n") < 0) {
         printf("f_printf failed\n");
     }
 
@@ -66,5 +90,84 @@ int main() {
     f_unmount("");
 
     puts("Goodbye, Secure Digital (SD) world!");
-    for (;;);
+
+    printf("jumping to SSD1306 animation...\n");
+    animation();
+
+  //for (;;);   //animation() loops forever
+}
+
+void setup_gpios(void) {
+    i2c_init(i2cx, 400000);
+    gpio_set_function(i2cx_sda_gpio, GPIO_FUNC_I2C);
+    gpio_set_function(i2cx_scl_gpio, GPIO_FUNC_I2C);
+    gpio_pull_up(i2cx_sda_gpio);
+    gpio_pull_up(i2cx_scl_gpio);
+}
+
+void animation(void) {
+    const char *words[]= {"SSD1306", "DISPLAY", "DRIVER"};
+
+    ssd1306_t disp;
+    disp.external_vcc=false;
+    ssd1306_init(&disp, 128, 64, 0x3C, i2cx);
+    ssd1306_clear(&disp);
+
+    printf("ANIMATION!\n");
+
+    char buf[8];
+
+    for(;;) {
+        for(int16_t y=0; y<31; ++y) {
+            ssd1306_draw_line(&disp, 0, y, 127, y);
+            ssd1306_show(&disp);
+            sleep_ms(SLEEPTIME);
+            ssd1306_clear(&disp);
+        }
+
+        for(int16_t y=0, i=1; y>=0; y+=i) {
+            ssd1306_draw_line(&disp, 0, 31-y, 127, 31+y);
+            ssd1306_draw_line(&disp, 0, 31+y, 127, 31-y);
+            ssd1306_show(&disp);
+            sleep_ms(SLEEPTIME);
+            ssd1306_clear(&disp);
+            if(y==32) i=-1;
+        }
+
+        for(int16_t i=0; i<sizeof(words)/sizeof(char *); ++i) {
+            ssd1306_draw_string(&disp, 8, 24, 2, words[i]);
+            ssd1306_show(&disp);
+            sleep_ms(800);
+            ssd1306_clear(&disp);
+        }
+
+        for(int16_t y=31; y<63; ++y) {
+            ssd1306_draw_line(&disp, 0, y, 127, y);
+            ssd1306_show(&disp);
+            sleep_ms(SLEEPTIME);
+            ssd1306_clear(&disp);
+        }
+
+        for(size_t font_i=0; font_i<sizeof(fonts)/sizeof(fonts[0]); ++font_i) {
+            uint8_t c=32;
+            while(c<=126) {
+                uint8_t i=0;
+                for(; i<num_chars_per_disp[font_i]; ++i) {
+                    if(c>126)
+                        break;
+                    buf[i]=c++;
+                }
+                buf[i]=0;
+
+                ssd1306_draw_string_with_font(&disp, 8, 24, 2, fonts[font_i], buf);
+                ssd1306_show(&disp);
+                sleep_ms(800);
+                ssd1306_clear(&disp);
+            }
+        }
+
+        ssd1306_bmp_show_image(&disp, image_data, image_size);
+        ssd1306_show(&disp);
+        sleep_ms(2000);
+    }
 }
