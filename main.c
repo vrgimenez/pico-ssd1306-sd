@@ -24,7 +24,8 @@ specific language governing permissions and limitations under the License.
 #include "ff.h"
 //ssd1306
 #include "lib/pico-ssd1306/ssd1306.h"
-#include "images/image.h"
+#include "images/LogoMaker128x64.h"
+#include "images/TestImage128x64.h"
 #include "fonts/acme_5_outlines_font.h"
 #include "fonts/bubblesstandard_font.h"
 #include "fonts/crackers_font.h"
@@ -125,6 +126,10 @@ void animation(void) {
             ssd1306_clear(&disp);
         }
 
+        ssd1306_bmp_show_image(&disp, logo_maker_data, logo_maker_size);
+        ssd1306_show(&disp);
+        sleep_ms(2000);
+
         for(int16_t y=0, i=1; y>=0; y+=i) {
             ssd1306_draw_line(&disp, 0, 31-y, 127, 31+y);
             ssd1306_draw_line(&disp, 0, 31+y, 127, 31-y);
@@ -166,7 +171,7 @@ void animation(void) {
             }
         }
 
-        ssd1306_bmp_show_image(&disp, image_data, image_size);
+        ssd1306_bmp_show_image(&disp, test_image_data, test_image_size);
         ssd1306_show(&disp);
         sleep_ms(2000);
     }
