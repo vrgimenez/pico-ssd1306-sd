@@ -81,7 +81,27 @@ int main() {
         printf("f_printf failed\n");
     }
 
+    printf("f_size(filename.txt): %llu\n", f_size(&fil));
+
     // Close the file
+    fr = f_close(&fil);
+    if (FR_OK != fr) {
+        printf("f_close error: %s (%d)\n", FRESULT_str(fr), fr);
+    }
+
+    // Open a image file
+    memset(&fil, 0, sizeof(FIL));   // Clear fil structure
+    const char imgfilename[] = "LogoFastline128x64.bmp";
+    //const char imgfilename[] = "Fastline.bmp";
+    fr = f_open(&fil, imgfilename, FA_OPEN_EXISTING);
+    if (FR_OK != fr) {
+        panic("f_open(%s) error: %s (%d)\n", imgfilename, FRESULT_str(fr), fr);
+    }
+
+    // Print the size of the image file (read test)
+    printf("f_size(LogoFastline128x64.bmp): %llu\n", f_size(&fil));
+
+    // Close the image file
     fr = f_close(&fil);
     if (FR_OK != fr) {
         printf("f_close error: %s (%d)\n", FRESULT_str(fr), fr);
