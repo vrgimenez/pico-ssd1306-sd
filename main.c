@@ -118,6 +118,30 @@ void animation(void) {
 
     char buf[8];
 
+    /*  Test displaying two images continously
+        Note: The ssd1306_bmp_show_image() function performs an OR operation
+        with the previous image. Essentially, it only calls ssd1306_draw_pixel()
+        to turn pixels on, preserving existing data in the framebuffer. To
+        prevent this effect, a ssd1306_clear() call is necessary to clear the
+        display. However, during debugging, I noticed that when a new image is
+        shown, parts of the previous image remain where the new image hasn't
+        reached. This is because the old data persists on the display itself,
+        awaiting new data. Therefore, a ssd1306_clear() followed by ssd1306_show()
+        is required to avoid this issue.
+    */
+    while(1)
+    {
+        ssd1306_bmp_show_image(&disp, logo_maker_data, logo_maker_size);
+        ssd1306_show(&disp);
+        ssd1306_clear(&disp);
+      //ssd1306_show(&disp);
+
+        ssd1306_bmp_show_image(&disp, test_image_data, test_image_size);
+        ssd1306_show(&disp);
+        ssd1306_clear(&disp);
+      //ssd1306_show(&disp);
+    }
+
     for(;;) {
         for(int16_t y=0; y<31; ++y) {
             ssd1306_draw_line(&disp, 0, y, 127, y);
