@@ -92,14 +92,22 @@ int main() {
     // Open a image file
     memset(&fil, 0, sizeof(FIL));   // Clear fil structure
     const char imgfilename[] = "LogoFastline128x64.bmp";
-    //const char imgfilename[] = "Fastline.bmp";
-    fr = f_open(&fil, imgfilename, FA_OPEN_EXISTING);
+    fr = f_open(&fil, imgfilename, FA_OPEN_EXISTING | FA_READ);
     if (FR_OK != fr) {
         panic("f_open(%s) error: %s (%d)\n", imgfilename, FRESULT_str(fr), fr);
     }
 
     // Print the size of the image file (read test)
     printf("f_size(LogoFastline128x64.bmp): %llu\n", f_size(&fil));
+
+    // Copy contents of image file to image buffer
+    char imgbuffer[2048];
+    UINT btr = f_size(&fil);    // Bytes to read
+    UINT br;                    // Bytes read count
+    fr = f_read(&fil, imgbuffer, btr, &br);
+    if (br == 0) {
+        printf("f_read error or eof: %s (%d)\n", FRESULT_str(fr), fr);
+    }
 
     // Close the image file
     fr = f_close(&fil);
@@ -112,10 +120,22 @@ int main() {
 
     puts("Goodbye, Secure Digital (SD) world!");
 
-    printf("jumping to SSD1306 animation...\n");
-    animation();
+    // Initializing Display
+    ssd1306_t disp;
+    disp.external_vcc=false;
+    ssd1306_init(&disp, 128, 64, 0x3C, i2cx);
+    ssd1306_clear(&disp);
 
-  //for (;;);   //animation() loops forever
+    // Show the Image on the Display
+    ssd1306_bmp_show_image(&disp, imgbuffer, br);
+    ssd1306_show(&disp);
+    sleep_ms(2000);
+  //ssd1306_clear(&disp);
+
+  //printf("jumping to SSD1306 animation...\n");
+  //animation();
+
+    for (;;);   //animation() loops forever
 }
 
 void setup_gpios(void) {
